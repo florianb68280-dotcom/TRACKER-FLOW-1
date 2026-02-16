@@ -21,7 +21,7 @@
     tr { border-bottom:1px solid #111; }
     tr:last-child { border-bottom:none; }
     input, select { width:100%; padding:8px; border-radius:0; border:1px solid #111; background:#000; color:white; }
-    button { margin-top:8px; padding:10px 14px; border:none; border-radius:0; background:#22c55e; color:#022c22; font-weight:700; }
+    button { margin-top:8px; padding:10px 14px; border:none; border-radius:0; background:#22c55e; color:#022c22; font-weight:700; cursor:pointer; }
     .add { background:#111; color:#e5e7eb; border:1px solid #222; }
     .delete { background:#3a0d0d; color:#fecaca; border:1px solid #7f1d1d; margin-left:8px; }
     .validate { background:#14532d; color:#bbf7d0; border:1px solid #166534; margin-right:8px; }
@@ -43,7 +43,8 @@ function save(){ localStorage.setItem('muscuPro', JSON.stringify(data)); }
 
 function toggleNameLock(){
   data.user.locked = !data.user.locked;
-  save(); render();
+  save(); 
+  render();
 }
 
 function updateName(value){ data.user.name = value; save(); }
@@ -77,20 +78,33 @@ function updateSession(day,value){ ensureDay(day); data[day].session = value; sa
 function render(){
   const app=document.getElementById('app'); app.innerHTML='';
 
-  // ===== NAME BOX =====
+  // ===== NAME BOX / BIENVENUE =====
   const nameDisabled = data.user.locked ? 'disabled' : '';
   const nameButton = data.user.locked ? 'Modifier' : 'Valider';
 
-  const nameBox = document.createElement('div');
-  nameBox.className = 'name-box';
-  nameBox.innerHTML = `
-    <div style="margin-bottom:8px; color:#9ca3af;">Ton prénom</div>
-    <div class="name-row">
-      <input ${nameDisabled} placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
-      <button class="validate" onclick="toggleNameLock()">${nameButton}</button>
-    </div>
-  `;
-  app.appendChild(nameBox);
+  if(!data.user.locked){
+    // Affiche l'encadré pour écrire le prénom
+    const nameBox = document.createElement('div');
+    nameBox.className = 'name-box';
+    nameBox.innerHTML = `
+      <div style="margin-bottom:8px; color:#9ca3af;">Ton prénom</div>
+      <div class="name-row">
+        <input ${nameDisabled} placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
+        <button class="validate" onclick="toggleNameLock()">${nameButton}</button>
+      </div>
+    `;
+    app.appendChild(nameBox);
+  } else {
+    // Affiche le message de bienvenue
+    const welcomeBox = document.createElement('div');
+    welcomeBox.className = 'name-box';
+    welcomeBox.innerHTML = `
+      <div style="font-size:18px; font-weight:700; color:#22c55e; text-align:center;">
+        Bienvenue sur ton tracker, ${data.user.name} !
+      </div>
+    `;
+    app.appendChild(welcomeBox);
+  }
 
   // ===== DAYS =====
   days.forEach(day=>{
