@@ -26,8 +26,6 @@
     .delete { margin-left:8px; border:1px solid; }
     .validate { margin-right:8px; border:1px solid; }
     .row-actions { white-space:nowrap; }
-    .section-title { margin-top:40px; margin-bottom:8px; font-size:18px; letter-spacing:1px; }
-    .chart-box { border:1px solid; padding:16px; margin-top:16px; transition: background 0.3s, border-color 0.3s, color 0.3s; }
     .mode-toggle { font-size:20px; cursor:pointer; user-select:none; }
   </style>
 </head>
@@ -92,17 +90,14 @@ function updateSession(day,value){ ensureDay(day); data[day].session = value; sa
 function render(){
   const app=document.getElementById('app'); app.innerHTML='';
 
-  const nameDisabled = data.user.locked ? 'disabled' : '';
-  const nameButton = data.user.locked ? 'Modifier' : 'Valider';
-
   if(!data.user.locked){
     const nameBox = document.createElement('div');
     nameBox.className = 'name-box';
     nameBox.innerHTML = `
       <div style="margin-bottom:8px; color:#9ca3af;">Ton prénom</div>
       <div class="name-row">
-        <input ${nameDisabled} placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
-        <button class="validate" onclick="toggleNameLock()">${nameButton}</button>
+        <input placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
+        <button class="validate" onclick="toggleNameLock()">Valider</button>
       </div>
     `;
     app.appendChild(nameBox);
@@ -167,13 +162,21 @@ function render(){
     plBox.innerHTML = `
       <div style="margin-bottom:8px; color:#9ca3af;">${pl.title}</div>
       <div class="name-row">
-        <button class="validate" onclick="window.open('${pl.url}', '_blank')">
-          Écouter
-        </button>
+        <button class="validate" onclick="window.open('${pl.url}', '_blank')">Écouter</button>
       </div>
     `;
     app.appendChild(plBox);
   });
+
+  const docBox = document.createElement('div');
+  docBox.className = 'name-box';
+  docBox.innerHTML = `
+    <div style="margin-bottom:8px; color:#9ca3af;">📄 Mon programme</div>
+    <div class="name-row">
+      <button class="validate" onclick="window.open('https://docs.google.com/document/d/1CnyfvJd2gIN27wSrDMUHKnvd-1S8SpXp/edit?usp=sharing&ouid=108787697672879839808&rtpof=true&sd=true', '_blank')">Ouvrir</button>
+    </div>
+  `;
+  app.appendChild(docBox);
 
   applyMode();
 }
