@@ -1,168 +1,186 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TRACKER FLOW 🔋</title>
-
-<style>
-body{
-  font-family: Arial, sans-serif;
-  background:#0f1115;
-  color:white;
-  margin:0;
-}
-header{
-  background:#000;
-  padding:20px;
-  text-align:center;
-  font-size:28px;
-  font-weight:bold;
-  letter-spacing:2px;
-}
-.container{padding:15px}
-.day{
-  border:2px solid #2a2d35;
-  padding:12px;
-  margin-bottom:15px;
-}
-.day-title{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:10px;
-  font-weight:bold;
-}
-input,button{
-  padding:8px;
-  margin:4px 0;
-  border:none;
-  outline:none;
-  font-size:14px;
-}
-input{width:100%;background:#1a1d24;color:white}
-button{
-  background:#16c60c;
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-}
-.small-btn{padding:6px 8px;font-size:12px}
-.playlists{
-  border-top:2px solid #333;
-  margin-top:40px;
-  padding-top:25px;
-  text-align:center;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRACKER FLOW 🔋</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background:#000; color:#e5e7eb; }
+    header { padding: 18px; font-size: 22px; font-weight: 800; text-align:center; background:#000; border-bottom:1px solid #111; position:sticky; top:0; letter-spacing:1px; }
+    .container { padding: 16px; max-width: 900px; margin:auto; }
+    .name-box { background:#050505; border:1px solid #111; padding:16px; margin-bottom:24px; }
+    .name-row { display:flex; gap:8px; }
+    .day { margin-bottom: 28px; }
+    .day-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .day h2 { margin: 12px 0; font-size: 20px; }
+    .session-input { padding:8px 10px; border:1px solid #222; background:#050505; color:#e5e7eb; width: 55%; }
+    table { width:100%; border-collapse: collapse; background:#050505; }
+    th, td { padding:12px; text-align:left; }
+    th { background:#0a0a0a; font-size:14px; text-transform:uppercase; letter-spacing:.5px; color:#9ca3af; }
+    tr { border-bottom:1px solid #111; }
+    tr:last-child { border-bottom:none; }
+    input, select { width:100%; padding:8px; border-radius:0; border:1px solid #111; background:#000; color:white; }
+    button { margin-top:8px; padding:10px 14px; border:none; border-radius:0; background:#22c55e; color:#022c22; font-weight:700; }
+    .add { background:#111; color:#e5e7eb; border:1px solid #222; }
+    .delete { background:#3a0d0d; color:#fecaca; border:1px solid #7f1d1d; margin-left:8px; }
+    .validate { background:#14532d; color:#bbf7d0; border:1px solid #166534; margin-right:8px; }
+    .row-actions { white-space:nowrap; }
+    .section-title { margin-top:40px; margin-bottom:8px; font-size:18px; letter-spacing:1px; color:#9ca3af; }
+    .chart-box { background:#050505; border:1px solid #111; padding:16px; margin-top:16px; }
+  </style>
 </head>
-
 <body>
-
 <header>TRACKER FLOW 🔋</header>
+<div class="container" id="app"></div>
 
-<div class="container">
+<script>
+const days = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+let data = JSON.parse(localStorage.getItem('muscuPro')||'{}');
+if(!data.user) data.user = { name:"", locked:false };
 
-<!-- PRENOM -->
-<div class="day">
-  <div class="day-title">Ton prénom</div>
-  <input id="nameInput" placeholder="Entre ton prénom...">
-  <button onclick="saveName()">Valider</button>
-</div>
+function save(){ localStorage.setItem('muscuPro', JSON.stringify(data)); }
 
-<!-- JOURS -->
-<div id="days"></div>
+function toggleNameLock(){
+  data.user.locked = !data.user.locked;
+  save(); render();
+}
 
-<button onclick="addExerciseGlobal()">➕ Ajouter un exercice</button>
+function updateName(value){ data.user.name = value; save(); }
 
-<!-- PARTAGE + PLAYLISTS -->
-<div class="playlists">
+function ensureDay(day){
+  if(!data[day]) data[day]={ session:"", exercises:[] };
+  if(!data[day].exercises) data[day].exercises=[];
+}
+
+function addExercise(day){
+  ensureDay(day);
+  data[day].exercises.push({name:"", weight:"", reps:"", locked:false});
+  save(); render();
+}
+
+function deleteExercise(day,i){
+  ensureDay(day);
+  data[day].exercises.splice(i,1);
+  save(); render();
+}
+
+function validateExercise(day,i){
+  ensureDay(day);
+  data[day].exercises[i].locked = !data[day].exercises[i].locked;
+  save(); render();
+}
+
+function update(day,i,field,value){ ensureDay(day); data[day].exercises[i][field]=value; save(); }
+function updateSession(day,value){ ensureDay(day); data[day].session = value; save(); }
+
+function render(){
+  const app=document.getElementById('app'); app.innerHTML='';
+
+  // ===== NAME BOX =====
+  const nameDisabled = data.user.locked ? 'disabled' : '';
+  const nameButton = data.user.locked ? 'Modifier' : 'Valider';
+
+  const nameBox = document.createElement('div');
+  nameBox.className = 'name-box';
+  nameBox.innerHTML = `
+    <div style="margin-bottom:8px; color:#9ca3af;">Ton prénom</div>
+    <div class="name-row">
+      <input ${nameDisabled} placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
+      <button class="validate" onclick="toggleNameLock()">${nameButton}</button>
+    </div>
+  `;
+  app.appendChild(nameBox);
+
+  // ===== DAYS =====
+  days.forEach(day=>{
+    const section=document.createElement('div'); section.className='day';
+    const dayData = data[day] || { session:"", exercises:[] };
+
+    let rows='';
+    (dayData.exercises||[]).forEach((ex,i)=>{
+      const disabled = ex.locked ? 'disabled' : '';
+      const validateText = ex.locked ? 'Modifier' : 'Valider';
+
+      rows+=`<tr>
+        <td><input ${disabled} placeholder="Exercice" value="${ex.name}" oninput="update('${day}',${i},'name',this.value)"></td>
+        <td><input ${disabled} type="number" placeholder="Poids" value="${ex.weight}" oninput="update('${day}',${i},'weight',this.value)"></td>
+        <td><input ${disabled} type="number" placeholder="Répétitions" value="${ex.reps}" oninput="update('${day}',${i},'reps',this.value)"></td>
+        <td class="row-actions">
+          <button class="validate" onclick="validateExercise('${day}',${i})">${validateText}</button>
+          <button class="delete" onclick="deleteExercise('${day}',${i})">Supprimer</button>
+        </td>
+      </tr>`;
+    });
+
+    section.innerHTML=`
+      <div class="day-header">
+        <h2>${day}</h2>
+        <input class="session-input" placeholder="Séance (ex: Pecs, Dos...)" value="${dayData.session || ''}" oninput="updateSession('${day}', this.value)">
+      </div>
+      <table>
+        <thead>
+          <tr><th>Exercice</th><th>Poids (kg)</th><th>Répétitions</th><th></th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div>
+        <button class="add" onclick="addExercise('${day}')">+ Ajouter un exercice</button>
+      </div>
+    `;
+
+    app.appendChild(section);
+  });
+}
+
+<!-- 🔥 PARTAGE + PLAYLISTS -->
+
+<div style="margin-top:60px;padding:30px;border-top:2px solid #444;text-align:center">
 
 <h2>📤 Partager l'application</h2>
 <button onclick="shareApp()">Partager Tracker Flow</button>
 
-<hr style="margin:30px 0;border-color:#333">
+<hr style="margin:30px 0;">
 
 <h2>🔥 Mes playlists muscu</h2>
 
-<p>Gym Rage 2026
-<button onclick="window.open('https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5?si=UxZP68d6St2V_JKs_EcWXw&pi=dxm-IGLHQHy8S','_blank')">Ouvrir</button>
+<p>
+Gym Rage 2026
+<button onclick="window.open('https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5?si=UxZP68d6St2V_JKs_EcWXw&pi=dxm-IGLHQHy8S','_blank')">
+Ouvrir
+</button>
 </p>
 
-<p>Gym 2026 aura ♾️
-<button onclick="window.open('https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl?si=jV_jao_pREKFtyfH4yrG1g&pi=1LbuTEDDTAq4b','_blank')">Ouvrir</button>
+<p>
+Gym 2026 aura ♾️
+<button onclick="window.open('https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl?si=jV_jao_pREKFtyfH4yrG1g&pi=1LbuTEDDTAq4b','_blank')">
+Ouvrir
+</button>
 </p>
 
-<p>Funk 2026
-<button onclick="window.open('https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT?si=vX4bLrm4T52IMOJ_bsX55A&pi=ccnspmw0TQKsX','_blank')">Ouvrir</button>
+<p>
+Funk 2026
+<button onclick="window.open('https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT?si=vX4bLrm4T52IMOJ_bsX55A&pi=ccnspmw0TQKsX','_blank')">
+Ouvrir
+</button>
 </p>
 
 </div>
-
-</div>
-
 <script>
-const days=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"]
-const container=document.getElementById("days")
-
-function createDays(){
-  days.forEach((d,i)=>{
-    const div=document.createElement("div")
-    div.className="day"
-    div.innerHTML=`
-      <div class="day-title">
-        ${d}
-        <input placeholder="Séance..." onchange="saveData()">
-      </div>
-      <div class="exos"></div>
-      <button class="small-btn" onclick="addExercise(this)">Ajouter exo</button>
-    `
-    container.appendChild(div)
-  })
-}
-
-function addExercise(btn){
-  const exos=btn.parentElement.querySelector(".exos")
-  const line=document.createElement("div")
-  line.innerHTML=`
-    <input placeholder="Exercice">
-    <input placeholder="Poids">
-    <button onclick="this.parentElement.remove();saveData()">❌</button>
-  `
-  exos.appendChild(line)
-  saveData()
-}
-
-function addExerciseGlobal(){
-  document.querySelectorAll(".small-btn")[0].click()
-}
-
-function saveName(){
-  localStorage.setItem("name",document.getElementById("nameInput").value)
-}
-
 function shareApp(){
   if(navigator.share){
     navigator.share({
       title:'Tracker Flow',
       text:'Teste mon app Tracker Flow 💪',
       url:window.location.href
-    })
-  }else alert("Copie le lien pour partager")
-}
-
-function saveData(){
-  localStorage.setItem("tracker",document.body.innerHTML)
-}
-
-function loadData(){
-  if(localStorage.getItem("tracker")){
-    document.body.innerHTML=localStorage.getItem("tracker")
+    });
+  }else{
+    alert("Copie le lien pour partager !");
   }
 }
-
-createDays()
-loadData()
 </script>
 
+render();
+</script>
 </body>
 </html>
