@@ -1,159 +1,164 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>TRACKER FLOW 🔋</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRACKER FLOW 🔋</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-body { font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin:0;transition:background .3s,color .3s;}
-header { padding:18px;font-size:22px;font-weight:800;text-align:center;border-bottom:1px solid;position:sticky;top:0;letter-spacing:1px;display:flex;justify-content:center;align-items:center;}
-.container { padding:16px;max-width:900px;margin:auto;}
-.name-box { background:#050505;border:1px solid #111;padding:16px;margin-bottom:24px;}
-.name-row { display:flex;gap:8px;}
-.day { margin-bottom:28px;}
-.day-header { display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.session-input { padding:8px 10px;border:1px solid;width:55%;}
-table { width:100%;border-collapse:collapse;}
-th,td { padding:12px;text-align:left;}
-tr { border-bottom:1px solid;}
-input,select { width:100%;padding:8px;border:1px solid;}
-button { margin-top:8px;padding:10px 14px;border:none;font-weight:700;cursor:pointer;}
-.add,.delete,.validate { border:1px solid;}
-.mode-btn{
-position:fixed;
-top:10px;
-right:10px;
-width:44px;
-height:44px;
-cursor:pointer;
-z-index:999;
-}
-</style>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; transition: background 0.3s, color 0.3s; }
+    header { padding: 18px; font-size: 22px; font-weight: 800; text-align:center; border-bottom:1px solid; position:sticky; top:0; letter-spacing:1px; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+    .container { padding: 16px; max-width: 900px; margin:auto; }
+    .name-box { background:#050505; border:1px solid #111; padding:16px; margin-bottom:24px; }
+    .name-row { display:flex; gap:8px; }
+    .day { margin-bottom: 28px; }
+    .day-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .session-input { padding:8px 10px; border:1px solid; width: 55%; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:12px; text-align:left; }
+    tr { border-bottom:1px solid; }
+    input { width:100%; padding:8px; border:1px solid; }
+    button { margin-top:8px; padding:10px 14px; border:none; font-weight:700; cursor:pointer; }
+    .add,.delete,.validate { border:1px solid; }
+    .mode-img {
+      position:absolute;
+      right:12px;
+      top:10px;
+      width:36px;
+      cursor:pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-<header>TRACKER FLOW 🔋</header>
-
-<!-- ===== BOUTON LOGO TOGGLE ===== -->
-<img id="modeBtn" class="mode-btn" src="moon.png">
+<header>
+  TRACKER FLOW 🔋
+  <img id="modeToggle" src="moon.png" class="mode-img">
+</header>
 
 <div class="container" id="app"></div>
 
 <script>
-const days=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
-let data=JSON.parse(localStorage.getItem('muscuPro')||'{}');
-if(!data.user) data.user={name:"",locked:false};
+const days = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+let data = JSON.parse(localStorage.getItem('muscuPro')||'{}');
+if(!data.user) data.user = { name:"", locked:false };
 
-let darkMode=JSON.parse(localStorage.getItem('darkMode')||'true');
-
-const modeBtn=document.getElementById("modeBtn");
+let darkMode = JSON.parse(localStorage.getItem('darkMode') || 'true');
 
 function applyMode(){
-if(darkMode){
-document.body.style.background="#000";
-document.body.style.color="#e5e7eb";
-modeBtn.src="moon.png";
-}else{
-document.body.style.background="#fff";
-document.body.style.color="#000";
-modeBtn.src="sun.png";
-}
-localStorage.setItem('darkMode',JSON.stringify(darkMode));
+  if(darkMode){
+    document.body.style.background = "#000";
+    document.body.style.color = "#e5e7eb";
+    document.querySelector('header').style.background = "#000";
+    document.querySelector('header').style.color = "#e5e7eb";
+    document.querySelector('header').style.borderColor = "#111";
+    document.getElementById('modeToggle').src = "moon.png";
+  } else {
+    document.body.style.background = "#fff";
+    document.body.style.color = "#000";
+    document.querySelector('header').style.background = "#f5f5f5";
+    document.querySelector('header').style.color = "#000";
+    document.querySelector('header').style.borderColor = "#ccc";
+    document.getElementById('modeToggle').src = "sun.png";
+  }
+  localStorage.setItem('darkMode', JSON.stringify(darkMode));
 }
 
-modeBtn.onclick=()=>{
-darkMode=!darkMode;
-applyMode();
+document.getElementById('modeToggle').onclick = ()=>{
+  darkMode = !darkMode;
+  applyMode();
 };
 
-function save(){localStorage.setItem('muscuPro',JSON.stringify(data));}
-function toggleNameLock(){data.user.locked=!data.user.locked;save();render();}
-function updateName(v){data.user.name=v;save();}
-function ensureDay(d){if(!data[d])data[d]={session:"",exercises:[]};}
-function addExercise(d){ensureDay(d);data[d].exercises.push({name:"",weight:"",reps:"",locked:false});save();render();}
-function deleteExercise(d,i){data[d].exercises.splice(i,1);save();render();}
-function validateExercise(d,i){data[d].exercises[i].locked=!data[d].exercises[i].locked;save();render();}
-function update(d,i,f,v){data[d].exercises[i][f]=v;save();}
-function updateSession(d,v){ensureDay(d);data[d].session=v;save();}
+function save(){ localStorage.setItem('muscuPro', JSON.stringify(data)); }
+function toggleNameLock(){ data.user.locked = !data.user.locked; save(); render(); }
+function updateName(v){ data.user.name = v; save(); }
+function ensureDay(d){ if(!data[d]) data[d]={ session:"", exercises:[] }; }
+function addExercise(d){ ensureDay(d); data[d].exercises.push({name:"",weight:"",reps:""}); save(); render(); }
+function deleteExercise(d,i){ data[d].exercises.splice(i,1); save(); render(); }
+function update(d,i,f,v){ data[d].exercises[i][f]=v; save(); }
+function updateSession(d,v){ ensureDay(d); data[d].session=v; save(); }
 
 function render(){
-const app=document.getElementById('app');app.innerHTML='';
+  const app=document.getElementById('app');
+  app.innerHTML='';
 
-if(!data.user.locked){
-app.innerHTML+=`
-<div class="name-box">
-<div>Ton prénom</div>
-<div class="name-row">
-<input placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
-<button class="validate" onclick="toggleNameLock()">Valider</button>
-</div></div>`;
-}else{
-app.innerHTML+=`
-<div class="name-box" style="text-align:center;font-weight:700;color:#22c55e">
-Bienvenue sur ton tracker, ${data.user.name} !
-</div>`;
-}
+  if(!data.user.locked){
+    app.innerHTML+=`
+      <div class="name-box">
+        <div>Ton prénom</div>
+        <div class="name-row">
+          <input placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
+          <button class="validate" onclick="toggleNameLock()">Valider</button>
+        </div>
+      </div>`;
+  } else {
+    app.innerHTML+=`
+      <div class="name-box" style="text-align:center;font-weight:700;color:#22c55e">
+        Bienvenue sur ton tracker, ${data.user.name} !
+      </div>`;
+  }
 
-[...days,"PR / RECORDS"].forEach(day=>{
-ensureDay(day);
-let rows="";
-data[day].exercises.forEach((ex,i)=>{
-rows+=`
-<tr>
-<td><input placeholder="Exercice" value="${ex.name}" oninput="update('${day}',${i},'name',this.value)"></td>
-<td><input type="number" placeholder="Poids" value="${ex.weight}" oninput="update('${day}',${i},'weight',this.value)"></td>
-<td><input type="number" placeholder="Répétitions" value="${ex.reps}" oninput="update('${day}',${i},'reps',this.value)"></td>
-<td>
-<button onclick="validateExercise('${day}',${i})">Valider</button>
-<button onclick="deleteExercise('${day}',${i})">Supprimer</button>
-</td>
-</tr>`;
-});
+  [...days,"PR / RECORDS"].forEach(day=>{
+    ensureDay(day);
+    let rows="";
+    data[day].exercises.forEach((ex,i)=>{
+      rows+=`
+      <tr>
+        <td><input value="${ex.name}" oninput="update('${day}',${i},'name',this.value)"></td>
+        <td><input type="number" value="${ex.weight}" oninput="update('${day}',${i},'weight',this.value)"></td>
+        <td><input type="number" value="${ex.reps}" oninput="update('${day}',${i},'reps',this.value)"></td>
+        <td>
+          <button onclick="deleteExercise('${day}',${i})">Supprimer</button>
+        </td>
+      </tr>`;
+    });
 
-app.innerHTML+=`
-<div class="day">
-<div class="day-header">
-<h2>${day}</h2>
-<input class="session-input" placeholder="Séance" value="${data[day].session||''}" oninput="updateSession('${day}',this.value)">
-</div>
-<table><tbody>${rows}</tbody></table>
-<button onclick="addExercise('${day}')">+ Ajouter un exercice</button>
-</div>`;
-});
+    app.innerHTML+=`
+      <div class="day">
+        <div class="day-header">
+          <h2>${day}</h2>
+          <input class="session-input" placeholder="Séance" value="${data[day].session||''}" oninput="updateSession('${day}',this.value)">
+        </div>
+        <table><tbody>${rows}</tbody></table>
+        <button onclick="addExercise('${day}')">+ Ajouter un exercice</button>
+      </div>`;
+  });
 
-// PLAYLISTS inchangées
-const playlists=[
-{title:"Gym Rage 2026",url:"https://open.spotify.com/..."},
-{title:"Gym 2026 Aura Max",url:"https://open.spotify.com/..."},
-{title:"Phonk 2026",url:"https://open.spotify.com/..."}
-];
+  const playlists = [
+    { title: "Gym Rage 2026", url: "https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5" },
+    { title: "Gym 2026 Aura Max", url: "https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl" },
+    { title: "Phonk 2026", url: "https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT" }
+  ];
 
-playlists.forEach(pl=>{
-app.innerHTML+=`
-<div class="name-box">
-<div>${pl.title}</div>
-<button onclick="window.open('${pl.url}','_blank')">Écouter</button>
-</div>`;
-});
+  playlists.forEach(pl=>{
+    app.innerHTML+=`
+      <div class="name-box">
+        <div>${pl.title}</div>
+        <button onclick="window.open('${pl.url}','_blank')">Écouter</button>
+      </div>`;
+  });
 
-// ===== BOUTON PARTAGER =====
-app.innerHTML+=`
-<div class="name-box" style="text-align:center">
-<button onclick="shareApp()">Partager l'application</button>
-</div>`;
+  // PARTAGER
+  app.innerHTML+=`
+    <div class="name-box" style="text-align:center">
+      <button onclick="shareApp()">Partager l'application</button>
+    </div>`;
 
-applyMode();
+  applyMode();
 }
 
 function shareApp(){
-if(navigator.share){
-navigator.share({title:"TRACKER FLOW 🔋",text:"Mon tracker fitness",url:window.location.href});
-}else{
-prompt("Copie ce lien :",window.location.href);
-}
+  if(navigator.share){
+    navigator.share({
+      title:"TRACKER FLOW 🔋",
+      text:"Mon tracker fitness",
+      url:window.location.href
+    });
+  } else {
+    prompt("Copie ce lien :", window.location.href);
+  }
 }
 
 render();
