@@ -14,22 +14,32 @@
     .day { margin-bottom: 28px; }
     .day-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .day h2 { margin: 12px 0; font-size: 20px; }
-    .session-input { padding:8px 10px; border:1px solid; width: 55%; }
-    table { width:100%; border-collapse: collapse; }
-    th, td { padding:12px; text-align:left; }
+    .session-input { padding:8px 10px; border:1px solid; width: 55%; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+    table { width:100%; border-collapse: collapse; transition: background 0.3s, color 0.3s; }
+    th, td { padding:12px; text-align:left; transition: background 0.3s, color 0.3s; }
     th { font-size:14px; text-transform:uppercase; letter-spacing:.5px; }
     tr { border-bottom:1px solid; }
-    input { width:100%; padding:8px; border:1px solid; }
-    button { margin-top:8px; padding:10px 14px; font-weight:700; cursor:pointer; }
-    .mode-toggle { font-size:20px; cursor:pointer; }
-    .reset { border:1px solid red; color:red; margin-left:10px; }
+    tr:last-child { border-bottom:none; }
+    input, select { width:100%; padding:8px; border-radius:0; border:1px solid; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+    button { margin-top:8px; padding:10px 14px; border:none; border-radius:0; font-weight:700; cursor:pointer; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+    .add { border:1px solid; }
+    .delete { margin-left:8px; border:1px solid; }
+    .validate { margin-right:8px; border:1px solid; }
+    .row-actions { white-space:nowrap; }
+    .section-title { margin-top:40px; margin-bottom:8px; font-size:18px; letter-spacing:1px; }
+    .chart-box { border:1px solid; padding:16px; margin-top:16px; transition: background 0.3s, border-color 0.3s, color 0.3s; }
+    .mode-toggle { font-size:20px; cursor:pointer; user-select:none; }
   </style>
 </head>
 <body>
 <header>
   TRACKER FLOW 🔋
-  <span id="modeToggle" class="mode-toggle">🌙</span>
-  <button class="reset" onclick="resetAll()">Réinitialiser</button>
+  <span id="modeToggle" class="mode-toggle" title="Changer le mode">🌙</span>
+
+  <!-- ✅ AJOUT SEULEMENT ICI -->
+  <button onclick="resetAll()" style="margin-left:10px; border:1px solid; background:none; color:inherit; font-weight:700; cursor:pointer;">
+    Réinitialiser
+  </button>
 </header>
 
 <div class="container" id="app"></div>
@@ -42,88 +52,8 @@ if(!data.user) data.user = { name:"", locked:false };
 let darkMode = JSON.parse(localStorage.getItem('darkMode') || 'true');
 
 function resetAll(){
-  if(confirm("Tout effacer ?")){
+  if(confirm("Tout effacer et remettre à zéro ?")){
     localStorage.removeItem('muscuPro');
     location.reload();
   }
 }
-
-function applyMode(){
-  document.body.style.background = darkMode ? "#000" : "#fff";
-  document.body.style.color = darkMode ? "#e5e7eb" : "#000";
-  localStorage.setItem('darkMode', JSON.stringify(darkMode));
-}
-
-document.getElementById('modeToggle').onclick = ()=>{
-  darkMode = !darkMode;
-  applyMode();
-};
-
-function save(){ localStorage.setItem('muscuPro', JSON.stringify(data)); }
-function toggleNameLock(){ data.user.locked = !data.user.locked; save(); render(); }
-function updateName(value){ data.user.name = value; save(); }
-function ensureDay(day){ if(!data[day]) data[day]={ session:"", exercises:[] }; }
-function addExercise(day){ ensureDay(day); data[day].exercises.push({name:"", weight:"", reps:"", locked:false}); save(); render(); }
-function deleteExercise(day,i){ data[day].exercises.splice(i,1); save(); render(); }
-function validateExercise(day,i){ data[day].exercises[i].locked = !data[day].exercises[i].locked; save(); render(); }
-function update(day,i,field,value){ data[day].exercises[i][field]=value; save(); }
-function updateSession(day,value){ ensureDay(day); data[day].session = value; save(); }
-
-function render(){
-  const app=document.getElementById('app');
-  app.innerHTML='';
-
-  days.forEach(day=>{
-    ensureDay(day);
-    const d=data[day];
-
-    let rows='';
-    d.exercises.forEach((ex,i)=>{
-      rows+=`
-      <tr>
-        <td><input value="${ex.name}" oninput="update('${day}',${i},'name',this.value)"></td>
-        <td><input type="number" value="${ex.weight}" oninput="update('${day}',${i},'weight',this.value)"></td>
-        <td><input type="number" value="${ex.reps}" oninput="update('${day}',${i},'reps',this.value)"></td>
-        <td>
-          <button onclick="validateExercise('${day}',${i})">Valider</button>
-          <button onclick="deleteExercise('${day}',${i})">Supprimer</button>
-        </td>
-      </tr>`;
-    });
-
-    app.innerHTML += `
-      <div class="day">
-        <div class="day-header">
-          <h2>${day}</h2>
-          <input class="session-input" placeholder="Séance" value="${d.session}" oninput="updateSession('${day}', this.value)">
-        </div>
-        <table>
-          <thead><tr><th>Exercice</th><th>Poids</th><th>Répétitions</th><th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <button onclick="addExercise('${day}')">+ Ajouter</button>
-      </div>`;
-  });
-
-  // PLAYLISTS (INCHANGÉES)
-  const playlists = [
-    { title: "Gym Rage 2026", url: "https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5" },
-    { title: "Gym 2026 Aura Max", url: "https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl" },
-    { title: "Phonk 2026", url: "https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT" }
-  ];
-
-  playlists.forEach(pl=>{
-    app.innerHTML += `
-      <div class="name-box">
-        <div>${pl.title}</div>
-        <button onclick="window.open('${pl.url}','_blank')">Écouter</button>
-      </div>`;
-  });
-
-  applyMode();
-}
-
-render();
-</script>
-</body>
-</html>
