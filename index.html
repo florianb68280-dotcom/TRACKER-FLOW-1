@@ -39,7 +39,9 @@
 <div class="container" id="app"></div>
 
 <script>
-const days = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+
+const days = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche","PR Record"];
+
 let data = JSON.parse(localStorage.getItem('muscuPro')||'{}');
 if(!data.user) data.user = { name:"", locked:false };
 
@@ -121,7 +123,6 @@ function updateSession(day,value){ ensureDay(day); data[day].session = value; sa
 function render(){
   const app=document.getElementById('app'); app.innerHTML='';
 
-  // ===== NAME BOX / BIENVENUE =====
   const nameDisabled = data.user.locked ? 'disabled' : '';
   const nameButton = data.user.locked ? 'Modifier' : 'Valider';
 
@@ -147,7 +148,6 @@ function render(){
     app.appendChild(welcomeBox);
   }
 
-  // ===== DAYS =====
   days.forEach(day=>{
     const section=document.createElement('div'); section.className='day';
     const dayData = data[day] || { session:"", exercises:[] };
@@ -187,28 +187,6 @@ function render(){
     app.appendChild(section);
   });
 
-  // ===== SPOTIFY PLAYLISTS =====
-  const playlists = [
-    { title: "Gym Rage 2026", url: "https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5?si=UxZP68d6St2V_JKs_EcWXw&pi=dxm-IGLHQHy8S" },
-    { title: "Gym 2026 Aura Max", url: "https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl?si=jV_jao_pREKFtyfH4yrG1g&pi=1LbuTEDDTAq4bEt" },
-    { title: "Phonk 2026", url: "https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT?si=vX4bLrm4T52IMOJ_bsX55A&pi=ccnspmw0TQKsX" }
-  ];
-
-  playlists.forEach(pl => {
-    const plBox = document.createElement('div');
-    plBox.className = 'name-box';
-    plBox.innerHTML = `
-      <div style="margin-bottom:8px; color:#9ca3af;">${pl.title}</div>
-      <div class="name-row">
-        <button class="validate" onclick="window.open('${pl.url}', '_blank')">
-          Écouter
-        </button>
-      </div>
-    `;
-    app.appendChild(plBox);
-  });
-
-  // Appliquer le mode actuel après le rendu
   applyMode();
 }
 
