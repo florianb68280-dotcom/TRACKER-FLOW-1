@@ -27,8 +27,6 @@
     .validate { margin-right:8px; border:1px solid; }
     .reset { border:1px solid; }
     .row-actions { white-space:nowrap; }
-    .section-title { margin-top:40px; margin-bottom:8px; font-size:18px; letter-spacing:1px; }
-    .chart-box { border:1px solid; padding:16px; margin-top:16px; transition: background 0.3s, border-color 0.3s, color 0.3s; }
     .mode-toggle { font-size:20px; cursor:pointer; user-select:none; }
   </style>
 </head>
@@ -162,6 +160,27 @@ function render(){
       </div>
     `;
     app.appendChild(section);
+  });
+
+  /* ===== TES PLAYLISTS SPOTIFY (inchangées) ===== */
+  const playlists = [
+    { title: "Gym Rage 2026", url: "https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5" },
+    { title: "Gym 2026 Aura Max", url: "https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl" },
+    { title: "Phonk 2026", url: "https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT" }
+  ];
+
+  playlists.forEach(pl => {
+    const plBox = document.createElement('div');
+    plBox.className = 'name-box';
+    plBox.innerHTML = `
+      <div style="margin-bottom:8px; color:#9ca3af;">${pl.title}</div>
+      <div class="name-row">
+        <button class="validate" onclick="window.open('${pl.url}', '_blank')">
+          Écouter
+        </button>
+      </div>
+    `;
+    app.appendChild(plBox);
   });
 
   applyMode();
