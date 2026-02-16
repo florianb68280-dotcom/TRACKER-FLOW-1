@@ -14,28 +14,24 @@
     .day { margin-bottom: 28px; }
     .day-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .day h2 { margin: 12px 0; font-size: 20px; }
-    .session-input { padding:8px 10px; border:1px solid; width: 55%; transition: background 0.3s, color 0.3s, border-color 0.3s; }
-    table { width:100%; border-collapse: collapse; transition: background 0.3s, color 0.3s; }
-    th, td { padding:12px; text-align:left; transition: background 0.3s, color 0.3s; }
+    .session-input { padding:8px 10px; border:1px solid; width: 55%; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:12px; text-align:left; }
     th { font-size:14px; text-transform:uppercase; letter-spacing:.5px; }
     tr { border-bottom:1px solid; }
-    tr:last-child { border-bottom:none; }
-    input, select { width:100%; padding:8px; border-radius:0; border:1px solid; transition: background 0.3s, color 0.3s, border-color 0.3s; }
-    button { margin-top:8px; padding:10px 14px; border:none; border-radius:0; font-weight:700; cursor:pointer; transition: background 0.3s, color 0.3s, border-color 0.3s; }
-    .add { border:1px solid; }
-    .delete { margin-left:8px; border:1px solid; }
-    .validate { margin-right:8px; border:1px solid; }
-    .row-actions { white-space:nowrap; }
-    .section-title { margin-top:40px; margin-bottom:8px; font-size:18px; letter-spacing:1px; }
-    .chart-box { border:1px solid; padding:16px; margin-top:16px; transition: background 0.3s, border-color 0.3s, color 0.3s; }
-    .mode-toggle { font-size:20px; cursor:pointer; user-select:none; }
+    input { width:100%; padding:8px; border:1px solid; }
+    button { margin-top:8px; padding:10px 14px; font-weight:700; cursor:pointer; }
+    .mode-toggle { font-size:20px; cursor:pointer; }
+    .reset { border:1px solid red; color:red; margin-left:10px; }
   </style>
 </head>
 <body>
 <header>
   TRACKER FLOW 🔋
-  <span id="modeToggle" class="mode-toggle" title="Changer le mode">🌙</span>
+  <span id="modeToggle" class="mode-toggle">🌙</span>
+  <button class="reset" onclick="resetAll()">Réinitialiser</button>
 </header>
+
 <div class="container" id="app"></div>
 
 <script>
@@ -45,128 +41,83 @@ if(!data.user) data.user = { name:"", locked:false };
 
 let darkMode = JSON.parse(localStorage.getItem('darkMode') || 'true');
 
-function applyMode(){
-  if(darkMode){
-    document.body.style.background = "#000";
-    document.body.style.color = "#e5e7eb";
-    document.querySelector('header').style.background = "#000";
-    document.querySelector('header').style.color = "#e5e7eb";
-    document.querySelector('header').style.borderColor = "#111";
-    document.querySelectorAll('.container, .name-box, table, input, select, button').forEach(el=>{
-      el.style.background = el.tagName === 'BUTTON' ? (el.className.includes('validate') ? '#14532d' : el.className.includes('delete') ? '#3a0d0d' : '#111') : '#050505';
-      el.style.color = el.tagName === 'BUTTON' ? (el.className.includes('validate') ? '#bbf7d0' : el.className.includes('delete') ? '#fecaca' : '#e5e7eb') : '#e5e7eb';
-      if(el.tagName === 'TABLE' || el.tagName === 'INPUT' || el.tagName === 'SELECT') el.style.borderColor = "#111";
-    });
-    document.getElementById('modeToggle').textContent = "🌙";
-  } else {
-    document.body.style.background = "#fff";
-    document.body.style.color = "#000";
-    document.querySelector('header').style.background = "#f5f5f5";
-    document.querySelector('header').style.color = "#000";
-    document.querySelector('header').style.borderColor = "#ccc";
-    document.querySelectorAll('.container, .name-box, table, input, select, button').forEach(el=>{
-      el.style.background = el.tagName === 'BUTTON' ? (el.className.includes('validate') ? '#22c55e' : el.className.includes('delete') ? '#f87171' : '#eee') : '#fff';
-      el.style.color = el.tagName === 'BUTTON' ? (el.className.includes('validate') ? '#022c22' : el.className.includes('delete') ? '#7f1d1d' : '#000') : '#000';
-      if(el.tagName === 'TABLE' || el.tagName === 'INPUT' || el.tagName === 'SELECT') el.style.borderColor = "#ccc";
-    });
-    document.getElementById('modeToggle').textContent = "☀️";
+function resetAll(){
+  if(confirm("Tout effacer ?")){
+    localStorage.removeItem('muscuPro');
+    location.reload();
   }
+}
+
+function applyMode(){
+  document.body.style.background = darkMode ? "#000" : "#fff";
+  document.body.style.color = darkMode ? "#e5e7eb" : "#000";
   localStorage.setItem('darkMode', JSON.stringify(darkMode));
 }
 
-document.getElementById('modeToggle').addEventListener('click', ()=>{
+document.getElementById('modeToggle').onclick = ()=>{
   darkMode = !darkMode;
   applyMode();
-});
+};
 
 function save(){ localStorage.setItem('muscuPro', JSON.stringify(data)); }
 function toggleNameLock(){ data.user.locked = !data.user.locked; save(); render(); }
 function updateName(value){ data.user.name = value; save(); }
-function ensureDay(day){ if(!data[day]) data[day]={ session:"", exercises:[] }; if(!data[day].exercises) data[day].exercises=[]; }
+function ensureDay(day){ if(!data[day]) data[day]={ session:"", exercises:[] }; }
 function addExercise(day){ ensureDay(day); data[day].exercises.push({name:"", weight:"", reps:"", locked:false}); save(); render(); }
-function deleteExercise(day,i){ ensureDay(day); data[day].exercises.splice(i,1); save(); render(); }
-function validateExercise(day,i){ ensureDay(day); data[day].exercises[i].locked = !data[day].exercises[i].locked; save(); render(); }
-function update(day,i,field,value){ ensureDay(day); data[day].exercises[i][field]=value; save(); }
+function deleteExercise(day,i){ data[day].exercises.splice(i,1); save(); render(); }
+function validateExercise(day,i){ data[day].exercises[i].locked = !data[day].exercises[i].locked; save(); render(); }
+function update(day,i,field,value){ data[day].exercises[i][field]=value; save(); }
 function updateSession(day,value){ ensureDay(day); data[day].session = value; save(); }
 
-function resetAll(){
-  if(confirm("Tout réinitialiser ?")){
-    localStorage.removeItem('muscuPro');
-    data = { user: { name:"", locked:false } };
-    render();
-  }
-}
-
 function render(){
-  const app=document.getElementById('app'); app.innerHTML='';
-
-  const nameDisabled = data.user.locked ? 'disabled' : '';
-  const nameButton = data.user.locked ? 'Modifier' : 'Valider';
-
-  if(!data.user.locked){
-    const nameBox = document.createElement('div');
-    nameBox.className = 'name-box';
-    nameBox.innerHTML = `
-      <div style="margin-bottom:8px; color:#9ca3af;">Ton prénom</div>
-      <div class="name-row">
-        <input ${nameDisabled} placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
-        <button class="validate" onclick="toggleNameLock()">${nameButton}</button>
-        <button class="delete" onclick="resetAll()">Réinitialiser</button>
-      </div>
-    `;
-    app.appendChild(nameBox);
-  } else {
-    const welcomeBox = document.createElement('div');
-    welcomeBox.className = 'name-box';
-    welcomeBox.innerHTML = `
-      <div style="font-size:18px; font-weight:700; color:#22c55e; text-align:center;">
-        Bienvenue sur ton tracker, ${data.user.name} !
-      </div>
-      <div class="name-row" style="justify-content:center;">
-        <button class="delete" onclick="resetAll()">Réinitialiser</button>
-      </div>
-    `;
-    app.appendChild(welcomeBox);
-  }
-
-  /* --- reste EXACTEMENT pareil --- */
+  const app=document.getElementById('app');
+  app.innerHTML='';
 
   days.forEach(day=>{
-    const section=document.createElement('div'); section.className='day';
-    const dayData = data[day] || { session:"", exercises:[] };
+    ensureDay(day);
+    const d=data[day];
 
     let rows='';
-    (dayData.exercises||[]).forEach((ex,i)=>{
-      const disabled = ex.locked ? 'disabled' : '';
-      const validateText = ex.locked ? 'Modifier' : 'Valider';
-
-      rows+=`<tr>
-        <td><input ${disabled} placeholder="Exercice" value="${ex.name}" oninput="update('${day}',${i},'name',this.value)"></td>
-        <td><input ${disabled} type="number" placeholder="Poids" value="${ex.weight}" oninput="update('${day}',${i},'weight',this.value)"></td>
-        <td><input ${disabled} type="number" placeholder="Répétitions" value="${ex.reps}" oninput="update('${day}',${i},'reps',this.value)"></td>
-        <td class="row-actions">
-          <button class="validate" onclick="validateExercise('${day}',${i})">${validateText}</button>
-          <button class="delete" onclick="deleteExercise('${day}',${i})">Supprimer</button>
+    d.exercises.forEach((ex,i)=>{
+      rows+=`
+      <tr>
+        <td><input value="${ex.name}" oninput="update('${day}',${i},'name',this.value)"></td>
+        <td><input type="number" value="${ex.weight}" oninput="update('${day}',${i},'weight',this.value)"></td>
+        <td><input type="number" value="${ex.reps}" oninput="update('${day}',${i},'reps',this.value)"></td>
+        <td>
+          <button onclick="validateExercise('${day}',${i})">Valider</button>
+          <button onclick="deleteExercise('${day}',${i})">Supprimer</button>
         </td>
       </tr>`;
     });
 
-    section.innerHTML=`
-      <div class="day-header">
-        <h2>${day}</h2>
-        <input class="session-input" placeholder="Séance (ex: Pecs, Dos...)" value="${dayData.session || ''}" oninput="updateSession('${day}', this.value)">
-      </div>
-      <table>
-        <thead>
-          <tr><th>Exercice</th><th>Poids (kg)</th><th>Répétitions</th><th></th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div>
-        <button class="add" onclick="addExercise('${day}')">+ Ajouter un exercice</button>
-      </div>
-    `;
-    app.appendChild(section);
+    app.innerHTML += `
+      <div class="day">
+        <div class="day-header">
+          <h2>${day}</h2>
+          <input class="session-input" placeholder="Séance" value="${d.session}" oninput="updateSession('${day}', this.value)">
+        </div>
+        <table>
+          <thead><tr><th>Exercice</th><th>Poids</th><th>Répétitions</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <button onclick="addExercise('${day}')">+ Ajouter</button>
+      </div>`;
+  });
+
+  // PLAYLISTS (INCHANGÉES)
+  const playlists = [
+    { title: "Gym Rage 2026", url: "https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5" },
+    { title: "Gym 2026 Aura Max", url: "https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl" },
+    { title: "Phonk 2026", url: "https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT" }
+  ];
+
+  playlists.forEach(pl=>{
+    app.innerHTML += `
+      <div class="name-box">
+        <div>${pl.title}</div>
+        <button onclick="window.open('${pl.url}','_blank')">Écouter</button>
+      </div>`;
   });
 
   applyMode();
