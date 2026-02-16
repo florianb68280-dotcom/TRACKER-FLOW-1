@@ -32,17 +32,10 @@
   </style>
 </head>
 <body>
-
 <header>
   TRACKER FLOW 🔋
   <span id="modeToggle" class="mode-toggle" title="Changer le mode">🌙</span>
-
-  <!-- 🔥 AJOUT UNIQUE -->
-  <button onclick="resetAll()" style="margin-left:10px; border:1px solid; background:none; color:inherit; font-weight:700; cursor:pointer;">
-    Réinitialiser
-  </button>
 </header>
-
 <div class="container" id="app"></div>
 
 <script>
@@ -51,14 +44,6 @@ let data = JSON.parse(localStorage.getItem('muscuPro')||'{}');
 if(!data.user) data.user = { name:"", locked:false };
 
 let darkMode = JSON.parse(localStorage.getItem('darkMode') || 'true');
-
-/* 🔥 AJOUT UNIQUE : fonction reset */
-function resetAll(){
-  if(confirm("Tout effacer et remettre à zéro ?")){
-    localStorage.removeItem('muscuPro');
-    location.reload();
-  }
-}
 
 function applyMode(){
   if(darkMode){
@@ -94,8 +79,6 @@ document.getElementById('modeToggle').addEventListener('click', ()=>{
   applyMode();
 });
 
-/* ⚠️ TOUT LE RESTE DE TON CODE EST STRICTEMENT IDENTIQUE */
-
 function save(){ localStorage.setItem('muscuPro', JSON.stringify(data)); }
 function toggleNameLock(){ data.user.locked = !data.user.locked; save(); render(); }
 function updateName(value){ data.user.name = value; save(); }
@@ -106,7 +89,94 @@ function validateExercise(day,i){ ensureDay(day); data[day].exercises[i].locked 
 function update(day,i,field,value){ ensureDay(day); data[day].exercises[i][field]=value; save(); }
 function updateSession(day,value){ ensureDay(day); data[day].session = value; save(); }
 
-/* le reste inchangé */
+function render(){
+  const app=document.getElementById('app'); app.innerHTML='';
+
+  const nameDisabled = data.user.locked ? 'disabled' : '';
+  const nameButton = data.user.locked ? 'Modifier' : 'Valider';
+
+  if(!data.user.locked){
+    const nameBox = document.createElement('div');
+    nameBox.className = 'name-box';
+    nameBox.innerHTML = `
+      <div style="margin-bottom:8px; color:#9ca3af;">Ton prénom</div>
+      <div class="name-row">
+        <input ${nameDisabled} placeholder="Écris ton prénom..." value="${data.user.name}" oninput="updateName(this.value)">
+        <button class="validate" onclick="toggleNameLock()">${nameButton}</button>
+      </div>
+    `;
+    app.appendChild(nameBox);
+  } else {
+    const welcomeBox = document.createElement('div');
+    welcomeBox.className = 'name-box';
+    welcomeBox.innerHTML = `
+      <div style="font-size:18px; font-weight:700; color:#22c55e; text-align:center;">
+        Bienvenue sur ton tracker, ${data.user.name} !
+      </div>
+    `;
+    app.appendChild(welcomeBox);
+  }
+
+  days.forEach(day=>{
+    const section=document.createElement('div'); section.className='day';
+    const dayData = data[day] || { session:"", exercises:[] };
+
+    let rows='';
+    (dayData.exercises||[]).forEach((ex,i)=>{
+      const disabled = ex.locked ? 'disabled' : '';
+      const validateText = ex.locked ? 'Modifier' : 'Valider';
+
+      rows+=`<tr>
+        <td><input ${disabled} placeholder="Exercice" value="${ex.name}" oninput="update('${day}',${i},'name',this.value)"></td>
+        <td><input ${disabled} type="number" placeholder="Poids" value="${ex.weight}" oninput="update('${day}',${i},'weight',this.value)"></td>
+        <td><input ${disabled} type="number" placeholder="Répétitions" value="${ex.reps}" oninput="update('${day}',${i},'reps',this.value)"></td>
+        <td class="row-actions">
+          <button class="validate" onclick="validateExercise('${day}',${i})">${validateText}</button>
+          <button class="delete" onclick="deleteExercise('${day}',${i})">Supprimer</button>
+        </td>
+      </tr>`;
+    });
+
+    section.innerHTML=`
+      <div class="day-header">
+        <h2>${day}</h2>
+        <input class="session-input" placeholder="Séance (ex: Pecs, Dos...)" value="${dayData.session || ''}" oninput="updateSession('${day}', this.value)">
+      </div>
+      <table>
+        <thead>
+          <tr><th>Exercice</th><th>Poids (kg)</th><th>Répétitions</th><th></th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div>
+        <button class="add" onclick="addExercise('${day}')">+ Ajouter un exercice</button>
+      </div>
+    `;
+    app.appendChild(section);
+  });
+
+  const playlists = [
+    { title: "Gym Rage 2026", url: "https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5?si=UxZP68d6St2V_JKs_EcWXw&pi=dxm-IGLHQHy8S" },
+    { title: "Gym 2026 Aura Max", url: "https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl?si=jV_jao_pREKFtyfH4yrG1g&pi=1LbuTEDDTAq4bEt" },
+    { title: "Phonk 2026", url: "https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT?si=vX4bLrm4T52IMOJ_bsX55A&pi=ccnspmw0TQKsX" }
+  ];
+
+  playlists.forEach(pl => {
+    const plBox = document.createElement('div');
+    plBox.className = 'name-box';
+    plBox.innerHTML = `
+      <div style="margin-bottom:8px; color:#9ca3af;">${pl.title}</div>
+      <div class="name-row">
+        <button class="validate" onclick="window.open('${pl.url}', '_blank')">
+          Écouter
+        </button>
+      </div>
+    `;
+    app.appendChild(plBox);
+  });
+
+  applyMode();
+}
 
 render();
 </script>
