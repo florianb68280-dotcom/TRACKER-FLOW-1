@@ -166,8 +166,7 @@ function render(){
   const playlists = [
     { title: "Gym Rage 2026", url: "https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5" },
     { title: "Gym 2026 Aura Max", url: "https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl" },
-    { title: "Phonk 2026", url: "https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT" }
-    { title: "Mon programme 📄", url: "https://docs.google.com/document/d/1CnyfvJd2gIN27wSrDMUHKnvd-1S8SpXp/edit?usp=sharing&ouid=108787697672879839808&rtpof=true&sd=true" }
+    { title: "Phonk 2026", url: "https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT" } 
   ];
 
   playlists.forEach(pl => {
@@ -186,6 +185,18 @@ function render(){
 
   applyMode();
 }
+// PROGRAMME GOOGLE DOCS / WORD
+const programBox = document.createElement('div');
+programBox.className = 'name-box';
+programBox.innerHTML = `
+  <div style="margin-bottom:8px; color:#9ca3af;">📄 Programme — Suite des pays</div>
+  <div class="name-row">
+    <button class="validate" onclick="window.open('METS_TON_LIEN_ICI', '_blank')">
+      Ouvrir le programme
+    </button>
+  </div>
+`;
+app.appendChild(programBox);
 
 render();
 </script>
