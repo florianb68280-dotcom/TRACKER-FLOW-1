@@ -133,53 +133,6 @@ function render(){
   });
 }
 
-<!-- 🔥 PARTAGE + PLAYLISTS -->
-
-<div style="margin-top:60px;padding:30px;border-top:2px solid #444;text-align:center">
-
-<h2>📤 Partager l'application</h2>
-<button onclick="shareApp()">Partager Tracker Flow</button>
-
-<hr style="margin:30px 0;">
-
-<h2>🔥 Mes playlists muscu</h2>
-
-<p>
-Gym Rage 2026
-<button onclick="window.open('https://open.spotify.com/playlist/7N18qf11u7KIUG5B2r1gh5?si=UxZP68d6St2V_JKs_EcWXw&pi=dxm-IGLHQHy8S','_blank')">
-Ouvrir
-</button>
-</p>
-
-<p>
-Gym 2026 aura ♾️
-<button onclick="window.open('https://open.spotify.com/playlist/1jBSfq44MLfKjVfATRcckl?si=jV_jao_pREKFtyfH4yrG1g&pi=1LbuTEDDTAq4b','_blank')">
-Ouvrir
-</button>
-</p>
-
-<p>
-Funk 2026
-<button onclick="window.open('https://open.spotify.com/playlist/0SNtdCHhaSVWqjJT3ATTMT?si=vX4bLrm4T52IMOJ_bsX55A&pi=ccnspmw0TQKsX','_blank')">
-Ouvrir
-</button>
-</p>
-
-</div>
-<script>
-function shareApp(){
-  if(navigator.share){
-    navigator.share({
-      title:'Tracker Flow',
-      text:'Teste mon app Tracker Flow 💪',
-      url:window.location.href
-    });
-  }else{
-    alert("Copie le lien pour partager !");
-  }
-}
-</script>
-
 render();
 </script>
 </body>
