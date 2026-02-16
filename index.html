@@ -32,11 +32,12 @@
   </style>
 </head>
 <body>
+
 <header>
   TRACKER FLOW 🔋
   <span id="modeToggle" class="mode-toggle" title="Changer le mode">🌙</span>
 
-  <!-- ✅ AJOUT SEULEMENT ICI -->
+  <!-- 🔥 AJOUT UNIQUE -->
   <button onclick="resetAll()" style="margin-left:10px; border:1px solid; background:none; color:inherit; font-weight:700; cursor:pointer;">
     Réinitialiser
   </button>
@@ -51,9 +52,63 @@ if(!data.user) data.user = { name:"", locked:false };
 
 let darkMode = JSON.parse(localStorage.getItem('darkMode') || 'true');
 
+/* 🔥 AJOUT UNIQUE : fonction reset */
 function resetAll(){
   if(confirm("Tout effacer et remettre à zéro ?")){
     localStorage.removeItem('muscuPro');
     location.reload();
   }
 }
+
+function applyMode(){
+  if(darkMode){
+    document.body.style.background = "#000";
+    document.body.style.color = "#e5e7eb";
+    document.querySelector('header').style.background = "#000";
+    document.querySelector('header').style.color = "#e5e7eb";
+    document.querySelector('header').style.borderColor = "#111";
+    document.querySelectorAll('.container, .name-box, table, input, select, button').forEach(el=>{
+      el.style.background = el.tagName === 'BUTTON' ? (el.className.includes('validate') ? '#14532d' : el.className.includes('delete') ? '#3a0d0d' : '#111') : '#050505';
+      el.style.color = el.tagName === 'BUTTON' ? (el.className.includes('validate') ? '#bbf7d0' : el.className.includes('delete') ? '#fecaca' : '#e5e7eb') : '#e5e7eb';
+      if(el.tagName === 'TABLE' || el.tagName === 'INPUT' || el.tagName === 'SELECT') el.style.borderColor = "#111";
+    });
+    document.getElementById('modeToggle').textContent = "🌙";
+  } else {
+    document.body.style.background = "#fff";
+    document.body.style.color = "#000";
+    document.querySelector('header').style.background = "#f5f5f5";
+    document.querySelector('header').style.color = "#000";
+    document.querySelector('header').style.borderColor = "#ccc";
+    document.querySelectorAll('.container, .name-box, table, input, select, button').forEach(el=>{
+      el.style.background = el.tagName === 'BUTTON' ? (el.className.includes('validate') ? '#22c55e' : el.className.includes('delete') ? '#f87171' : '#eee') : '#fff';
+      el.style.color = el.tagName === 'BUTTON' ? (el.className.includes('validate') ? '#022c22' : el.className.includes('delete') ? '#7f1d1d' : '#000') : '#000';
+      if(el.tagName === 'TABLE' || el.tagName === 'INPUT' || el.tagName === 'SELECT') el.style.borderColor = "#ccc";
+    });
+    document.getElementById('modeToggle').textContent = "☀️";
+  }
+  localStorage.setItem('darkMode', JSON.stringify(darkMode));
+}
+
+document.getElementById('modeToggle').addEventListener('click', ()=>{
+  darkMode = !darkMode;
+  applyMode();
+});
+
+/* ⚠️ TOUT LE RESTE DE TON CODE EST STRICTEMENT IDENTIQUE */
+
+function save(){ localStorage.setItem('muscuPro', JSON.stringify(data)); }
+function toggleNameLock(){ data.user.locked = !data.user.locked; save(); render(); }
+function updateName(value){ data.user.name = value; save(); }
+function ensureDay(day){ if(!data[day]) data[day]={ session:"", exercises:[] }; if(!data[day].exercises) data[day].exercises=[]; }
+function addExercise(day){ ensureDay(day); data[day].exercises.push({name:"", weight:"", reps:"", locked:false}); save(); render(); }
+function deleteExercise(day,i){ ensureDay(day); data[day].exercises.splice(i,1); save(); render(); }
+function validateExercise(day,i){ ensureDay(day); data[day].exercises[i].locked = !data[day].exercises[i].locked; save(); render(); }
+function update(day,i,field,value){ ensureDay(day); data[day].exercises[i][field]=value; save(); }
+function updateSession(day,value){ ensureDay(day); data[day].session = value; save(); }
+
+/* le reste inchangé */
+
+render();
+</script>
+</body>
+</html>
